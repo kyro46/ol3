@@ -89,6 +89,12 @@
     
     //document.getElementById('coor').innerHTML = this.feature_.getStyle().getText().getText() + "    "    +this.coordinate_[0] + "   " + this.coordinate_[1];
     
+	var  format = new ol.format.GeoJSON();
+	var data;
+	data = format.writeFeatures(vectorLayer.getSource().getFeatures());
+	//$('#data').val(JSON.stringify(data, null, 4));
+	document.getElementById('geojson').innerHTML = data;
+    
   };
 
 
@@ -188,7 +194,19 @@
       ;
       
       feature.setStyle(iconStyle);
+      
+	  var name = prompt("Please enter the name", "My Point");
+
+	  //Save Name to Label and to JSON, refresh Layer
+	  feature.getStyle().getText().setText(name);
+	  feature.set('name', name);
+
       vectorLayer.getSource().addFeature(feature);
+      
+		var  format = new ol.format.GeoJSON();
+		var data;
+		data = format.writeFeatures(vectorLayer.getSource().getFeatures());
+		document.getElementById('geojson').innerHTML = data;
     }
   ;
   var contextmenu_items = [
@@ -207,13 +225,27 @@
   
   var removeMarker = function(obj){
     vectorLayer.getSource().removeFeature(obj.data.marker);
+    
+	var  format = new ol.format.GeoJSON();
+	var data;
+	data = format.writeFeatures(vectorLayer.getSource().getFeatures());
+	document.getElementById('geojson').innerHTML = data;
+    
   };
   var editMarker = function(obj){
 	  var name = prompt("Please enter the name", "My Point");
 
 	  //document.getElementById('coor').innerHTML = obj.data.marker.getStyle().getText().getText();
 
+	  //Save Name to Label and to JSON, refresh Layer
 	  obj.data.marker.getStyle().getText().setText(name);
+	  obj.data.marker.set('name', name);
+	  
+		var  format = new ol.format.GeoJSON();
+		var data;
+		data = format.writeFeatures(vectorLayer.getSource().getFeatures());
+		document.getElementById('geojson').innerHTML = data;
+
 	  vectorLayer.getSource().changed();
 	};
   var editMarkerItem = {
