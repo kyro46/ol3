@@ -6,21 +6,98 @@
     <script src="http://openlayers.org/en/v3.15.1/build/ol.js"></script>
   </head>
   <body>
+    <textarea   id="geojson" name="geojson">{GEOJSON_TEXT}</textarea >
+    <form class="form-inline">
+      <label> type &nbsp;</label>
+      <select id="type">
+        <option value="modify">modify</option>
+        <option value="draw">draw</option>
+        <option value="remove">remove</option>
+      </select>
+    </form>    
     <div id="map" class="map"></div>
     <script>
-      var raster = new ol.layer.Tile({
-        source: new ol.source.MapQuest({
-          layer: 'sat'
-        })
-      });
+    
+    var existingGeoJSON = {"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-384.6093750000001,-58.898434638976994],[-397.265625,-179.13280963897705],[310.0781249999999,-161.554684638977],[300.2343749999999,-54.679684638976994],[-384.6093750000001,-58.898434638976994]]]},"properties":{"id":"1459426880700","name":"polygon11111","opttext":"tooltip11111","points_answer":"1","points_position":"1"}},{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-287.578125,148.52344036102295],[-272.109375,64.14844036102295],[41.484375,69.77344036102295],[49.921875,216.02344036102295],[-287.578125,148.52344036102295]]]},"properties":{"id":"1459433115534","name":"polygon22222","opttext":"tooltip","points_answer":"1","points_position":"1"}}]};
 
-      var vector = new ol.layer.Vector({
-        source: new ol.source.Vector({
-          url: 'data/geojson/countries.geojson',
+      var imageLayer = new ol.layer.Image({
+  		title: "image",
+  		opacity: 1,
+  		source: new ol.source.ImageStatic({
+  		  //url: '{IMAGE_PATH}',
+    	  projection: 'EPSG:4326',
+  		  url: 'uhd.jpg',
+  		  //ToDo Adjust dimensions according to uploaded image: +/-x:2 and +/-y:2 minx,miny,maxx,maxy
+  		  imageExtent: [-390, -303, 390, 303],
+  		  //Size in Pixels:
+  		  imageSize: [780, 606]
+  		})
+  	  });     
+      
+      var source = new ol.source.Vector({
           format: new ol.format.GeoJSON(),
           wrapX: false
-        })
+        });
+      
+      var vectorLayer = new ol.layer.Vector({
+        source: source
       });
+
+      // apply old values
+      var createTextStyle = function(name) {
+  	  
+    	  var align = 'center';
+    	  var baseline = 'middle';
+    	  var size = '15px';
+    	  var offsetX = 0;
+    	  var offsetY = 0;
+    	  var weight = 'bold';
+    	  var rotation = 0;
+    	  //var font = weight + ' ' + size + ' ' + 'veranda';
+    	  var font = '14px helvetica,sans-serif';
+
+    	  var fillColor = '#000';
+    	  var outlineColor = '#fff'
+    	  var outlineWidth = 2;
+
+    	  return new ol.style.Text({
+    	    textAlign: align,
+    	    textBaseline: baseline,
+    	    font: font,
+    	    text: name,
+    	    fill: new ol.style.Fill({color: fillColor}),
+    	    stroke: new ol.style.Stroke({color: outlineColor, width: outlineWidth}),
+    	    offsetX: offsetX,
+    	    offsetY: offsetY,
+    	    rotation: rotation
+    	  });
+    	};
+    	
+    	var createStyleFunction = function(name) {
+    	  return function(feature) {
+    		      		  
+    	    var style = new ol.style.Style({
+    	      stroke: new ol.style.Stroke({
+    	        color: 'rgba(0,153,255, 1)',
+    	        width: 3
+    	      }),
+    	      fill: new ol.style.Fill({
+    	        color: 'rgba(255, 255, 255, 0.1)'
+    	      }),
+    	      text: createTextStyle(name)
+    	    });
+    	    return [style];
+    	  };
+    	};
+    	
+      var existingFeatures = new ol.format.GeoJSON().readFeatures(existingGeoJSON);
+      for (var partFeature of existingFeatures) {
+    	  
+    	  var name = partFeature.get('name');
+    	  partFeature.setStyle(createStyleFunction(name));
+      };
+      vectorLayer.getSource().addFeatures(existingFeatures);
+  	// end apply old values
 
       var select = new ol.interaction.Select({
         wrapX: false
@@ -29,16 +106,88 @@
       var modify = new ol.interaction.Modify({
         features: select.getFeatures()
       });
-
+      
       var map = new ol.Map({
         interactions: ol.interaction.defaults().extend([select, modify]),
-        layers: [raster, vector],
+        layers: [imageLayer, vectorLayer],
         target: 'map',
         view: new ol.View({
           center: [0, 0],
-          zoom: 2
+  		  projection: 'EPSG:4326',
+          zoom: 0
         })
       });
+      
+      function removeFeature(feature){
+    	  source.removeFeature(feature); 
+      }
+      
+      var select;
+      var selectR;
+      var changeLabel;
+      var modify;
+      var draw; // global so we can remove it later
+      function addInteraction() {
+        var value = typeSelect.value;
+        if (value == 'draw') {
+            draw = new ol.interaction.Draw({
+            source: source,
+            type: /** @type {ol.geom.GeometryType} */ 'Polygon',
+          });
+          map.addInteraction(draw);
+        } else if (value == 'modify'){
+        	
+            select = new ol.interaction.Select({
+                wrapX: false
+              });
+
+              modify = new ol.interaction.Modify({
+                features: select.getFeatures()
+              });
+            map.addInteraction(select);
+            map.addInteraction(modify);
+        } else if (value == 'remove') {
+            selectR = new ol.interaction.Select({
+                wrapX: false
+              });
+
+            selectR.getFeatures().on('add', function (event) {
+                removeFeature(event.element);
+          	    vectorLayer.getSource().changed();
+
+               });
+
+            map.addInteraction(selectR);
+        };
+        	
+      }
+
+      
+      source.on('change', function (event) {
+     		var  format = new ol.format.GeoJSON();
+    		var data;
+    		data = format.writeFeatures(vectorLayer.getSource().getFeatures());
+    		document.getElementById('geojson').innerHTML = data;
+      });
+      
+      source.on('addfeature', function (event) {
+    		var name = prompt("Please enter the name", "polygon");
+    		
+    		
+    });
+      var typeSelect = document.getElementById('type');
+      typeSelect.onchange = function(e) {
+    	  map.removeInteraction(select);
+    	  map.removeInteraction(modify);
+    	  map.removeInteraction(draw);
+    	  map.removeInteraction(selectR);
+
+
+
+    	  addInteraction();
+    	};
+
+        
     </script>
   </body>
 </html>
