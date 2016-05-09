@@ -168,6 +168,8 @@
     		var data;
     		data = format.writeFeatures(vectorLayer.getSource().getFeatures());
     		document.getElementById('geojson').innerHTML = data;
+      	    map.changed();
+
       });
       
       source.on('addfeature', function (event) {
