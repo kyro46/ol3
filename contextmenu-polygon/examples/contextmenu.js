@@ -3,25 +3,40 @@
 	  var draw; // global so we can remove it later
 
   var 
-    view = new ol.View({
+  view = new ol.View({
       center: [0, 0],
-      zoom: 3,
-      minZoom: 2,
-      maxZoom: 20
+      zoom: 0,
+		  projection: 'EPSG:4326',
+      minZoom: 0,
+      maxZoom: 4
     }),
     vectorLayer = new ol.layer.Vector({
       source: new ol.source.Vector()
     }),
+    /*
     baseLayer = new ol.layer.Tile({
       preload: Infinity,
       opacity: 1,
       source: new ol.source.MapQuest({layer: 'osm'})
-    }),
+    }),*/
+    imageLayer = new ol.layer.Image({
+		title: "image",
+		opacity: 1,
+		source: new ol.source.ImageStatic({
+		  url: 'uhd.jpg',
+  		  projection: 'EPSG:4326',
+		  //url: 'uhd.jpg',
+		  //ToDo Adjust dimensions according to uploaded image: +/-x:2 and +/-y:2 minx,miny,maxx,maxy
+		  imageExtent: [-390, -303, 390, 303],
+		  //Size in Pixels:
+		  imageSize: [780, 606]
+		})
+	  }),   
     map = new ol.Map({
       target: doc.getElementById('map'),
       loadTilesWhileAnimating: true,
       view: view,
-      layers: [baseLayer, vectorLayer]
+      layers: [imageLayer, vectorLayer]
     }),
     // from https://github.com/DmitryBaranovskiy/raphael
     elastic = function(t) {
@@ -85,7 +100,6 @@
 		featureOverlay.getSource().changed();
 	};
 	
-	//TODO Add additional option: MOVE polygon
 	
   var editMarkerItem = {
 		    text: 'Edit this Polygon',
@@ -162,7 +176,7 @@
   
   var features = new ol.Collection();
   var featureOverlay = new ol.layer.Vector({
-    source: new ol.source.Vector({features: features}),
+      source: new ol.source.Vector({features: features, wrapX: false}),
     style: new ol.style.Style({
       fill: new ol.style.Fill({
         color: 'rgba(255, 255, 255, 0.2)'
