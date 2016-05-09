@@ -2,6 +2,37 @@
 	'use strict';
 	  var draw; // global so we can remove it later
 
+	  var features = new ol.Collection();
+	  var featureOverlay = new ol.layer.Vector({
+	      source: new ol.source.Vector({features: features, wrapX: false}),
+	    style: new ol.style.Style({
+	      fill: new ol.style.Fill({
+	        color: 'rgba(255, 255, 255, 0.2)'
+	      }),
+	      stroke: new ol.style.Stroke({
+	        color: '#ffcc33',
+	        width: 2
+	      }),
+	      image: new ol.style.Circle({
+	        radius: 7,
+	        fill: new ol.style.Fill({
+	          color: '#ffcc33'
+	        })
+	      }),
+	      text: new ol.style.Text({
+	  	    textAlign: 'center',
+		    textBaseline: 'middle',
+		    font: '14px helvetica,sans-serif',
+		    text: "",
+		    fill: new ol.style.Fill({color: '#000'}),
+		    stroke: new ol.style.Stroke({color: '#fff', width: 2}),
+		    offsetX: 0,
+		    offsetY: 0,
+		    rotation: 0
+	      })
+	    })
+	  });	  
+	  
   var 
   view = new ol.View({
       center: [0, 0],
@@ -10,15 +41,6 @@
       minZoom: 0,
       maxZoom: 4
     }),
-    vectorLayer = new ol.layer.Vector({
-      source: new ol.source.Vector()
-    }),
-    /*
-    baseLayer = new ol.layer.Tile({
-      preload: Infinity,
-      opacity: 1,
-      source: new ol.source.MapQuest({layer: 'osm'})
-    }),*/
     imageLayer = new ol.layer.Image({
 		title: "image",
 		opacity: 1,
@@ -36,7 +58,7 @@
       target: doc.getElementById('map'),
       loadTilesWhileAnimating: true,
       view: view,
-      layers: [imageLayer, vectorLayer]
+      layers: [imageLayer, featureOverlay]
     }),
     // from https://github.com/DmitryBaranovskiy/raphael
     elastic = function(t) {
@@ -145,67 +167,6 @@
     map.getTarget().style.cursor = hit ? 'pointer' : '';
   });
 
-  
-  var polygonStyle = new ol.style.Style({
-      fill: new ol.style.Fill({
-          color: 'rgba(255, 255, 255, 0.2)'
-        }),
-        stroke: new ol.style.Stroke({
-          color: '#ffcc33',
-          width: 2
-        }),
-        image: new ol.style.Circle({
-          radius: 7,
-          fill: new ol.style.Fill({
-            color: '#ffcc33'
-          })
-        }),
-        text: new ol.style.Text({
-    	    textAlign: 'center',
-  	    textBaseline: 'middle',
-  	    font: '14px helvetica,sans-serif',
-  	    text: "hallo welt",
-  	    fill: new ol.style.Fill({color: '#000'}),
-  	    stroke: new ol.style.Stroke({color: '#fff', width: 2}),
-  	    offsetX: 0,
-  	    offsetY: 0,
-  	    rotation: 0
-        })
-      });
-  
-  
-  var features = new ol.Collection();
-  var featureOverlay = new ol.layer.Vector({
-      source: new ol.source.Vector({features: features, wrapX: false}),
-    style: new ol.style.Style({
-      fill: new ol.style.Fill({
-        color: 'rgba(255, 255, 255, 0.2)'
-      }),
-      stroke: new ol.style.Stroke({
-        color: '#ffcc33',
-        width: 2
-      }),
-      image: new ol.style.Circle({
-        radius: 7,
-        fill: new ol.style.Fill({
-          color: '#ffcc33'
-        })
-      }),
-      text: new ol.style.Text({
-  	    textAlign: 'center',
-	    textBaseline: 'middle',
-	    font: '14px helvetica,sans-serif',
-	    text: "hallo welt",
-	    fill: new ol.style.Fill({color: '#000'}),
-	    stroke: new ol.style.Stroke({color: '#fff', width: 2}),
-	    offsetX: 0,
-	    offsetY: 0,
-	    rotation: 0
-      })
-    })
-  });
-  featureOverlay.setMap(map);
-
   var modify = new ol.interaction.Modify({
     features: features,
     // the SHIFT key must be pressed to delete vertices, so
@@ -227,7 +188,32 @@
 	  e.element.set('points_answer', 1);
 	  e.element.set('points_position', 1);
 	  
-	  e.element.setStyle(polygonStyle);
+	  e.element.setStyle(new ol.style.Style({
+	      fill: new ol.style.Fill({
+	          color: 'rgba(255, 255, 255, 0.2)'
+	        }),
+	        stroke: new ol.style.Stroke({
+	          color: '#ffcc33',
+	          width: 2
+	        }),
+	        image: new ol.style.Circle({
+	          radius: 7,
+	          fill: new ol.style.Fill({
+	            color: '#ffcc33'
+	          })
+	        }),
+	        text: new ol.style.Text({
+	    	    textAlign: 'center',
+	  	    textBaseline: 'middle',
+	  	    font: '14px helvetica,sans-serif',
+	  	    text: "",
+	  	    fill: new ol.style.Fill({color: '#000'}),
+	  	    stroke: new ol.style.Stroke({color: '#fff', width: 2}),
+	  	    offsetX: 0,
+	  	    offsetY: 0,
+	  	    rotation: 0
+	        })
+	      }));
 	  e.element.getStyle().getText().setText(name);
 	  
 	  
